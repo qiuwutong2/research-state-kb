@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+.venv/
+.envs/
+.conda-pkgs/
+.codex/config.toml
+spatial-unit-kb/data/
+spatial-unit-kb/local_tools/data/
+spatial-unit-kb/phase1a/runs*/
+experiments/
+*.log
+*.lock
+.DS_Store
