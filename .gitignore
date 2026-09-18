@@ -13,3 +13,5 @@ experiments/
 *.log
 *.lock
 .DS_Store
+
+inbox/

@@ -12,6 +12,7 @@ from mcp.types import ToolAnnotations
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "local_tools"))
 from research_kb import Store, IntegrityError, select, search, provenance, validate_batch, fingerprint
 from import_summaries import check_sources
+from library import Library
 
 Namespace = Literal["real", "demo"]
 READ = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -22,7 +23,7 @@ def build_server(workspace: Path):
     workspace = workspace.resolve()
     kb = workspace / "spatial-unit-kb"
     roots = {"real": kb / "data/real_summary", "demo": kb / "local_tools/data/demo_working"}
-    mcp = FastMCP("research-kb", instructions="Local deterministic knowledge tools. Real store is read-only through MCP. Demo records are not real evidence.")
+    mcp = FastMCP("research-kb", instructions="Local deterministic knowledge tools. Legacy real research state is read-only. Domain sources and draft cards/plans may be recorded when authorized; no real experimental conclusions. Demo records are not real evidence.")
 
     def store(namespace):
         path = roots[namespace]
@@ -117,6 +118,61 @@ def build_server(workspace: Path):
         validate_batch(target, proposals)
         records = target.commit(proposals, actor="research-kb MCP caller (unverified label)")
         return envelope(namespace, {"written": True, "records": records})
+
+
+    def library(namespace):
+        return Library(workspace, namespace)
+
+    @mcp.tool(annotations=READ)
+    def library_status(namespace: Namespace = "real") -> dict:
+        """Inspect the small domain library without creating it. Counts are not scientific readiness."""
+        return library(namespace).status()
+
+    @mcp.tool(annotations=WRITE)
+    def register_source(source_id: str, file_path: str, title: str,
+                        source_type: Literal["paper", "book", "web", "user_note"] = "paper",
+                        origin: str = "", expected_version: int = 0, namespace: Namespace = "real") -> dict:
+        """Archive a user-authorized local file staged inside workspace (e.g. inbox/).
+        Registers file provenance only; does not read, parse or certify scientific content.
+        Web input requires a saved local snapshot and original URL. No downloads.
+        """
+        return library(namespace).register_source(source_id, file_path, title, source_type, origin, expected_version)
+
+    @mcp.tool(annotations=READ)
+    def search_knowledge(query: str = "", kind: str = "", limit: int = 50, namespace: Namespace = "real") -> dict:
+        """List or keyword-search source metadata, method/formula cards and experiment drafts.
+        kind: source, method, formula, experiment_plan, or empty. Does not search PDF full text.
+        """
+        return {"namespace": namespace, **library(namespace).list(query, kind, limit)}
+
+    @mcp.tool(annotations=READ)
+    def get_knowledge(record_id: str, version: int | None = None, namespace: Namespace = "real") -> dict:
+        """Read a domain-library record; separate from legacy get_record and its research-state store."""
+        return library(namespace).get(record_id, version)
+
+    @mcp.tool(annotations=READ)
+    def trace_knowledge(record_id: str, version: int | None = None, namespace: Namespace = "real") -> dict:
+        """Trace exact references to archived source files and verify their hashes. Page numbers optional."""
+        return library(namespace).trace(record_id, version)
+
+    @mcp.tool(annotations=WRITE)
+    def save_knowledge_card(card_id: str, kind: Literal["method", "formula"], data: dict,
+                            sources: list[dict], expected_version: int = 0, namespace: Namespace = "real") -> dict:
+        """Save an authorized draft method/formula card. Sources must be exact source id/version refs.
+        Required data: title, content, conditions, limitations, basis(direct/adapted/original), rationale.
+        Formula adds expression and symbols dict; method adds procedure. Optional locator, reading_note.
+        Does not verify scientific correctness or record accepted experimental conclusions.
+        """
+        return library(namespace).save_card(card_id, kind, data, sources, expected_version)
+
+    @mcp.tool(annotations=WRITE)
+    def save_experiment_plan(plan_id: str, data: dict, expected_version: int = 0, namespace: Namespace = "real") -> dict:
+        """Save an authorized draft, never an executed experiment or accepted Decision.
+        data: title, question, data_requirements, alternatives, steps, outputs, interpretation_limits.
+        Each step: action, purpose, basis(direct/adapted/original), rationale, refs[{id,version}].
+        Every step needs source/method/formula refs that resolve to archived files.
+        """
+        return library(namespace).save_plan(plan_id, data, expected_version)
 
     return mcp
 

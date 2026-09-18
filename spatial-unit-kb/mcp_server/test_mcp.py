@@ -40,7 +40,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
             async with ClientSession(read, write) as client:
                 await client.initialize()
                 tools = await client.list_tools()
-                self.assertEqual(len(tools.tools), 13)
+                self.assertEqual(len(tools.tools), 20)
                 self.assertTrue(next(t for t in tools.tools if t.name == "get_current_state").annotations.readOnlyHint)
                 state = payload(await client.call_tool("get_current_state", {}))
                 self.assertEqual(state["namespace"], "real")
@@ -60,7 +60,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
             demo = root / "spatial-unit-kb/local_tools/data/demo_working"
             demo.mkdir(parents=True)
             seed = Store(demo, "demo")
-            seed.commit(build_demo(root, "A1"))
+            seed.commit(build_demo(self.root, "A1"))
             resume(seed)
             proposals = [{"id": "Q-MCP-TEST", "kind": "OpenQuestion", "expected_version": 0, "category": "evaluation_injection",
                           "scope": "temporary MCP test", "refs": {}, "data": {"unresolved_target": "unknown", "why_unresolved": "test", "needed_evidence": "test"}}]
@@ -80,6 +80,45 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
                     await client.initialize()
                     saved = payload(await client.call_tool("get_record", {"namespace": "demo", "record_id": "Q-MCP-TEST"}))
                     self.assertEqual(saved["result"]["version"], 1)
+
+    async def test_domain_library_roundtrip_without_legacy_real_state_writes(self):
+        note = self.root / "input.md"
+        note.write_text("Synthetic mean formula note.", encoding="utf-8")
+        params = StdioServerParameters(command=sys.executable, args=["-X", "utf8", str(HERE / "server.py"), "--workspace", str(self.root)])
+        legacy = self.root / "spatial-unit-kb/data/real_summary/records.json"
+        before = legacy.read_bytes()
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as client:
+                await client.initialize()
+                initial = payload(await client.call_tool("library_status", {}))
+                self.assertFalse(initial["initialized"])
+                source = payload(await client.call_tool("register_source", {
+                    "source_id": "SRC-TUTORIAL", "file_path": "input.md",
+                    "title": "Synthetic tutorial", "source_type": "user_note"}))
+                data = {"title": "Mean", "content": "Description", "conditions": "common unit",
+                        "limitations": "no mechanism inference", "basis": "direct", "rationale": "tutorial note",
+                        "expression": "sum(x_i)/n", "symbols": {"n": "positive count", "x_i": "measurement"}}
+                record = payload(await client.call_tool("save_knowledge_card", {
+                    "card_id": "FORM-TEST", "kind": "formula", "data": data,
+                    "sources": [{"id": source["id"], "version": source["version"]}]}))
+                self.assertEqual(record["record_status"], "draft_unverified")
+                plan_data = {"title": "MCP draft", "question": "Describe data", "data_requirements": "common units",
+                             "alternatives": "No mechanism claim", "outputs": "mean table", "interpretation_limits": "not executed",
+                             "steps": [{"action": "Compute mean", "purpose": "description", "basis": "direct",
+                                        "rationale": "registered formula", "refs": [{"id": "FORM-TEST", "version": 1}]}]}
+                saved_plan = payload(await client.call_tool("save_experiment_plan", {"plan_id": "PLAN-MCP", "data": plan_data}))
+                self.assertEqual(saved_plan["record_status"], "draft_unverified")
+                found = payload(await client.call_tool("search_knowledge", {"query": "MCP", "kind": "experiment_plan"}))
+                self.assertEqual(found["total_matches"], 1)
+                trace = payload(await client.call_tool("trace_knowledge", {"record_id": "FORM-TEST"}))
+                self.assertTrue(trace["files"][0]["file_verified"])
+                self.assertTrue((await client.call_tool("get_knowledge", {"record_id": "FORM-TEST", "namespace": "demo"})).isError)
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as client:
+                await client.initialize()
+                record = payload(await client.call_tool("get_knowledge", {"record_id": "FORM-TEST"}))
+                self.assertEqual(record["version"], 1)
+                self.assertEqual(legacy.read_bytes(), before)
 
 
 if __name__ == "__main__":

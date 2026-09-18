@@ -1,0 +1,37 @@
+{
+  "formula": {
+    "title": "描述性均值",
+    "content": "对同单位的已提供数值计算算术平均值。",
+    "conditions": "n>0；测量具有可比含义和相同单位。",
+    "limitations": "均值仅描述样本，不能识别因果机制。",
+    "basis": "direct",
+    "rationale": "教学笔记给出了表达式及边界。",
+    "expression": "mean = sum(x_i) / n",
+    "symbols": {
+      "x_i": "第 i 个观测数值，具有统一单位",
+      "n": "观测数目，正整数"
+    }
+  },
+  "plan": {
+    "title": "合成数据的描述计划",
+    "question": "给定样本的平均测量值是多少？",
+    "data_requirements": "非空数值表，以及每列单位和测量含义。",
+    "alternatives": "本例只做描述，不能区分机制解释。",
+    "steps": [
+      {
+        "action": "核对单位和非空条件后计算均值。",
+        "purpose": "描述所提供的样本。",
+        "basis": "direct",
+        "rationale": "采用已登记的教学公式及使用条件。",
+        "refs": [
+          {
+            "id": "FORM-TUTORIAL",
+            "version": 1
+          }
+        ]
+      }
+    ],
+    "outputs": "样本数、单位和均值表。",
+    "interpretation_limits": "未执行的教学草案，不能登记为真实结果。"
+  }
+}

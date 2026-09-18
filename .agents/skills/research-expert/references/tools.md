@@ -27,7 +27,7 @@ MCP 配置 ID：`research-kb`。工具显示前缀由宿主决定，以实际发
 
 先 validate_proposal，获得 proposal_sha256；保持原批次不变再在用户授权范围内调用 commit_demo_proposal，传入 validated_sha256。该值是批次一致性校验，不是用户授权证明。提交时再次校验版本，过期则重新读取后处理，不能强行改数字覆盖。
 
-真实库的写入不经此 MCP 暴露。不要为了满足请求把 real 改为 demo 后声称已记录真实结论。
+旧研究状态真实库的写入不经此 MCP 暴露。新的领域来源与草案库参见 library.md。不要为了满足请求把 real 改为 demo 后声称已记录真实结论。
 
 ## 只读 CLI 后备
 
