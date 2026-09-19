@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>研究脉络 · Research State KB</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header><div class="brand"><span class="mark">R</span><div><b>研究脉络</b><small>Research State KB · 实验演进与依据</small></div></div><div class="header-tools"><label>记录空间 <select id="namespace"><option value="real">真实项目</option><option value="demo">合成演示</option></select></label><button id="refresh">刷新记录</button><span class="pill">本机 · 只读</span></div></header>
+<main>
+<section class="overview"><div><p class="eyebrow">EXPERIMENT LINEAGE</p><h1>让每一次转向，都有迹可循。</h1><p class="muted">从最初的问题，到方法调整、资料补充与阶段总结。选择节点，回看当时的目标和依据。</p></div><div id="counts" class="counts"></div></section>
+<div class="controls"><label>实验 <select id="experiment"><option value="">尚无实验记录</option></select></label><label class="searchbox">查找 <input id="search" placeholder="节点、方法或目标…" type="search"></label><div class="zoom"><button id="zoomOut" aria-label="缩小">−</button><span id="scale">100%</span><button id="zoomIn" aria-label="放大">＋</button><button id="resetZoom">复位</button><button id="fitZoom">全图</button></div></div>
+<div id="notice" class="notice" role="status"></div>
+<div class="workspace"><section class="graph-panel"><div class="panel-bar"><span><i class="dot"></i>路线图</span><span class="muted">连线表示发展关系；点击节点查看快照</span></div><div class="legend"><span>起点</span><span>推进 / 分支</span><span>阶段总结</span><em>计划与已报告执行状态分别标记</em></div><div id="canvas"><div id="extent"><div id="world"></div></div><div id="empty" hidden></div></div></section>
+<aside class="detail-panel"><div class="panel-bar"><span>节点详情</span><span id="nodeId" class="mono"></span></div><div id="detail"><div class="placeholder">选择一个节点<br><small>查看方法、参数、依据和新增内容</small></div></div></aside></div>
+<section class="compare-panel"><div class="compare-title"><div><p class="eyebrow">COMPARE SNAPSHOTS</p><h2>这一步，改变了什么？</h2></div><div class="compare-controls"><select id="compareA" aria-label="比较起始节点"></select><span>→</span><select id="compareB" aria-label="比较目标节点"></select><button id="compare">比较节点</button></div></div><div id="comparison" class="muted">选择两个节点，对比目标、方法、参数和引用版本。分支合并时可逐一比较父节点。</div></section>
+<section class="preview-panel" id="previewPanel" hidden><div class="panel-bar"><span id="previewTitle">来源预览</span><div><a id="openFile" target="_blank" rel="noopener noreferrer">单独打开 / 下载</a><button id="closePreview">收起</button></div></div><p class="muted preview-note">显示已归档文件。HTML/SVG 以文本预览；文件存在不代表科研结论已验证。论文定位到具体文件即可。</p><iframe id="preview" title="归档来源文件预览"></iframe></section>
+<footer>数据只从本机资料库读取 · 页面不修改记录 · 执行状态由记录者报告，归档产物不等于独立复算</footer>
+</main></body></html>

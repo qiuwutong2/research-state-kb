@@ -40,7 +40,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
             async with ClientSession(read, write) as client:
                 await client.initialize()
                 tools = await client.list_tools()
-                self.assertEqual(len(tools.tools), 20)
+                self.assertEqual(len(tools.tools), 24)
                 self.assertTrue(next(t for t in tools.tools if t.name == "get_current_state").annotations.readOnlyHint)
                 state = payload(await client.call_tool("get_current_state", {}))
                 self.assertEqual(state["namespace"], "real")
@@ -119,6 +119,33 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
                 record = payload(await client.call_tool("get_knowledge", {"record_id": "FORM-TEST"}))
                 self.assertEqual(record["version"], 1)
                 self.assertEqual(legacy.read_bytes(), before)
+
+
+    async def test_route_tools_append_compare_and_artifact_requirement(self):
+        note = self.root / "route-note.md"
+        note.write_text("Synthetic route basis.", encoding="utf-8")
+        log = self.root / "route-result.log"
+        log.write_text("Synthetic result fixture, not an experiment.", encoding="utf-8")
+        params = StdioServerParameters(command=sys.executable, args=["-X", "utf8", str(HERE / "server.py"), "--workspace", str(self.root)])
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as client:
+                await client.initialize()
+                payload(await client.call_tool("register_source", {"source_id":"SRC-R","file_path":"route-note.md","title":"Route basis","source_type":"user_note"}))
+                data={"experiment_id":"EX-MCP","title":"Initial","stage":"start","status":"planned",
+                      "goal":"Goal","method":"Method","rationale":"Synthetic basis","parameters":{"k":1},
+                      "parents":[],"knowledge":[{"id":"SRC-R","version":1}],"datasets":[],"artifacts":[],
+                      "change_reason":"Start","summary":"Not run","open_questions":"Unknown"}
+                payload(await client.call_tool("append_route_node", {"node_id":"NODE-R1","data":data}))
+                data.update(title="Next",stage="end",status="completed",parents=[{"id":"NODE-R1","version":1}],parameters={"k":2})
+                self.assertTrue((await client.call_tool("append_route_node", {"node_id":"NODE-R2","data":data})).isError)
+                payload(await client.call_tool("register_research_file", {"record_id":"ART-R","file_path":"route-result.log","title":"Log","role":"artifact","origin":"Synthetic test"}))
+                data["artifacts"]=[{"id":"ART-R","version":1}]
+                payload(await client.call_tool("append_route_node", {"node_id":"NODE-R2","data":data}))
+                graph=payload(await client.call_tool("get_route_graph", {"experiment_id":"EX-MCP"}))
+                self.assertEqual(len(graph["edges"]),1)
+                diff=payload(await client.call_tool("compare_route_nodes", {"first_id":"NODE-R1","second_id":"NODE-R2"}))
+                self.assertEqual(diff["parameter_changes"]["k"]["after"],2)
+                self.assertTrue((await client.call_tool("append_route_node", {"node_id":"NODE-R2","data":data})).isError)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "local_tools"))
 from research_kb import Store, IntegrityError, select, search, provenance, validate_batch, fingerprint
 from import_summaries import check_sources
 from library import Library
+from routes import Routes
 
 Namespace = Literal["real", "demo"]
 READ = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -141,7 +142,7 @@ def build_server(workspace: Path):
     @mcp.tool(annotations=READ)
     def search_knowledge(query: str = "", kind: str = "", limit: int = 50, namespace: Namespace = "real") -> dict:
         """List or keyword-search source metadata, method/formula cards and experiment drafts.
-        kind: source, method, formula, experiment_plan, or empty. Does not search PDF full text.
+        kind: source, method, formula, experiment_plan, research_file, route_node, or empty. Does not search PDF full text.
         """
         return {"namespace": namespace, **library(namespace).list(query, kind, limit)}
 
@@ -173,6 +174,34 @@ def build_server(workspace: Path):
         Every step needs source/method/formula refs that resolve to archived files.
         """
         return library(namespace).save_plan(plan_id, data, expected_version)
+
+
+    @mcp.tool(annotations=WRITE)
+    def register_research_file(record_id: str, file_path: str, title: str,
+                               role: Literal["dataset", "artifact"], origin: str,
+                               expected_version: int = 0, namespace: Namespace = "real") -> dict:
+        """Archive authorized local dataset/result/log for route discussion. File existence is not execution verification."""
+        return Routes(workspace, namespace).register_file(record_id, file_path, title, role, origin, expected_version)
+
+    @mcp.tool(annotations=WRITE)
+    def append_route_node(node_id: str, data: dict, namespace: Namespace = "real") -> dict:
+        """Append immutable route snapshot. Never overwrite nodes; corrections create child nodes.
+        Required data: experiment_id,title,stage(start/middle/end),status(planned/running/completed/failed/paused/abandoned),
+        goal,method,rationale,parameters(dict),parents,knowledge,datasets,artifacts (exact id/version lists),
+        change_reason,summary,open_questions. Knowledge nonempty; completed/failed require artifacts.
+        Status is reported by caller, not independently verified. Does not update accepted scientific conclusions.
+        """
+        return Routes(workspace, namespace).append(node_id, data)
+
+    @mcp.tool(annotations=READ)
+    def get_route_graph(experiment_id: str = "", namespace: Namespace = "real") -> dict:
+        """Read experiment route branches with fixed source/file versions; no silent demo fallback."""
+        return Routes(workspace, namespace).graph(experiment_id)
+
+    @mcp.tool(annotations=READ)
+    def compare_route_nodes(first_id: str, second_id: str, namespace: Namespace = "real") -> dict:
+        """Compare goals, methods, per-key parameters and added/removed source, dataset and artifact references."""
+        return Routes(workspace, namespace).compare(first_id, second_id)
 
     return mcp
 

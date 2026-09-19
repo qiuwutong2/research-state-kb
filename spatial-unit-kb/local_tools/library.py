@@ -11,7 +11,7 @@ import re
 import sqlite3
 import unicodedata
 
-KINDS = {"source", "method", "formula", "experiment_plan"}
+KINDS = {"source", "method", "formula", "experiment_plan", "research_file", "route_node"}
 EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".html", ".htm", ".epub"}
 MAX_BYTES = 50 * 1024 * 1024
 
@@ -123,7 +123,7 @@ class Library:
                 continue
             seen.add(key)
             records.append(record)
-            if record["kind"] == "source":
+            if record["kind"] in {"source", "research_file"}:
                 relative = record["data"]["file"]
                 path = (self.root / relative).resolve()
                 require(path.is_relative_to((self.root / "files").resolve()), "archive path escapes root")
@@ -149,7 +149,7 @@ class Library:
         if previous:
             require(self._get(conn, ident)["kind"] == kind, "record kind is immutable")
         record = {"id": ident, "version": expected + 1, "namespace": self.namespace, "kind": kind,
-                  "data": data, "refs": refs, "record_status": "source_registered" if kind == "source" else "draft_unverified",
+                  "data": data, "refs": refs, "record_status": ("source_registered" if kind == "source" else "reported_not_independently_verified" if kind in {"research_file", "route_node"} else "draft_unverified"),
                   "created_at": datetime.now(timezone.utc).isoformat()}
         body = encoded(record)
         conn.execute("INSERT INTO records VALUES (?,?,?,?,?)",
