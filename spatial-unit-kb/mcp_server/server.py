@@ -14,6 +14,7 @@ from research_kb import Store, IntegrityError, select, search, provenance, valid
 from import_summaries import check_sources
 from library import Library
 from routes import Routes
+from knowledge_map import KnowledgeMap
 
 Namespace = Literal["real", "demo"]
 READ = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
@@ -202,6 +203,21 @@ def build_server(workspace: Path):
     def compare_route_nodes(first_id: str, second_id: str, namespace: Namespace = "real") -> dict:
         """Compare goals, methods, per-key parameters and added/removed source, dataset and artifact references."""
         return Routes(workspace, namespace).compare(first_id, second_id)
+
+    @mcp.tool(annotations=WRITE)
+    def classify_knowledge(target: dict, domains: list[str], rationale: str,
+                           expected_version: int = 0, namespace: Namespace = "real") -> dict:
+        """Register authorized domain labels for one exact target {id,version}.
+        Classification is caller-reported metadata, not scientific validation.
+        Empty domains removes classification in a new revision; old revisions remain.
+        New target versions require explicit classification; do not infer or inherit silently.
+        """
+        return KnowledgeMap(workspace, namespace).classify(target, domains, rationale, expected_version)
+
+    @mcp.tool(annotations=READ)
+    def get_knowledge_graph(namespace: Namespace = "real") -> dict:
+        """Read explicit domain memberships and exact version citation edges; no inferred semantic links."""
+        return KnowledgeMap(workspace, namespace).graph()
 
     return mcp
 

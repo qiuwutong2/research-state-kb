@@ -69,3 +69,7 @@ $("zoomIn").onclick=()=>{zoom=Math.min(1.5,zoom+.1);applyZoom();};$("zoomOut").o
 const initial=new URLSearchParams(location.search).get("namespace");if(initial==="demo")$("namespace").value="demo";load();
 
 $("fitZoom").onclick=()=>{zoom=Math.min(1,Math.max(.4,($("canvas").clientWidth-15)/width));applyZoom();$("canvas").scrollTo(0,0);};
+
+const knowledgeLink = document.getElementById("knowledgeLink");
+function syncKnowledgeLink(){knowledgeLink.href="/knowledge?namespace="+document.getElementById("namespace").value}
+document.getElementById("namespace").addEventListener("change",syncKnowledgeLink);syncKnowledgeLink();

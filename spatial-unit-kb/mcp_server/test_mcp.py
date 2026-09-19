@@ -40,7 +40,7 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
             async with ClientSession(read, write) as client:
                 await client.initialize()
                 tools = await client.list_tools()
-                self.assertEqual(len(tools.tools), 24)
+                self.assertEqual(len(tools.tools), 26)
                 self.assertTrue(next(t for t in tools.tools if t.name == "get_current_state").annotations.readOnlyHint)
                 state = payload(await client.call_tool("get_current_state", {}))
                 self.assertEqual(state["namespace"], "real")

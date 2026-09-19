@@ -11,7 +11,7 @@ import re
 import sqlite3
 import unicodedata
 
-KINDS = {"source", "method", "formula", "experiment_plan", "research_file", "route_node"}
+KINDS = {"classification", "source", "method", "formula", "experiment_plan", "research_file", "route_node"}
 EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".html", ".htm", ".epub"}
 MAX_BYTES = 50 * 1024 * 1024
 

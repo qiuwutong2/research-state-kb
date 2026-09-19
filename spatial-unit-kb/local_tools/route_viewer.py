@@ -10,6 +10,7 @@ import sys
 
 from library import Library, require
 from routes import Routes
+from knowledge_map import KnowledgeMap
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'"
@@ -49,14 +50,19 @@ def make_server(workspace, port=8765):
             try:
                 namespace = param("namespace", "real")
                 require(namespace in {"real", "demo"}, "invalid namespace")
-                if parsed.path in {"/", "/app.js", "/style.css"}:
-                    name, mime = {"/": ("index.html", "text/html; charset=utf-8"),
+                if parsed.path in {"/", "/app.js", "/style.css", "/knowledge", "/knowledge.js", "/knowledge.css"}:
+                    name, mime = {"/knowledge": ("knowledge.html", "text/html; charset=utf-8"),
+                                  "/knowledge.js": ("knowledge.js", "text/javascript; charset=utf-8"),
+                                  "/knowledge.css": ("knowledge.css", "text/css; charset=utf-8"),
+                                  "/": ("index.html", "text/html; charset=utf-8"),
                                   "/app.js": ("app.js", "text/javascript; charset=utf-8"),
                                   "/style.css": ("style.css", "text/css; charset=utf-8")}[parsed.path]
                     self.send((WEB / name).read_bytes(), mime)
                     return
                 routes = Routes(workspace, namespace)
-                if parsed.path == "/api/graph":
+                if parsed.path == "/api/knowledge-graph":
+                    result = KnowledgeMap(workspace, namespace).graph()
+                elif parsed.path == "/api/graph":
                     result = routes.graph(param("experiment"))
                 elif parsed.path == "/api/compare":
                     result = routes.compare(param("first"), param("second"))

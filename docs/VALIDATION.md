@@ -14,3 +14,9 @@ CI 配置面向 Windows 和 Ubuntu；远端实际结果以 GitHub Actions 为准
 小项目资料库验收：42 项本地测试通过（17 存储、22 CLI/资料库/摘要、3 MCP），含 200 条来源登记、文件损坏/缺失、旧版本回溯、无依据步骤拒绝、MCP 重启读取。教学脚本重复运行通过。200 条登记不等于真实全文阅读性能基准。
 
 路线网页验收：17 存储 + 33 本地工具/HTTP + 4 MCP = 54 项测试。涵盖分支与汇合、追加保护、固定来源版本、逐参数差异、状态产物要求、角色/命名空间检查、252 节点完整返回和只读 HTTP。Edge 浏览器验证节点选择、比较、文件内嵌、真实/演示隔离、390px 与桌面布局；未测其他浏览器 PDF 插件兼容性。
+
+## Knowledge map validation (2026-09-19)
+
+Current full suite: 59 tests passed locally (17 state, 38 local tools, 4 MCP). MCP discovery exposes 26 tools. Knowledge-map tests cover classifications, stale writes, namespace isolation, exact historical versions, no inherited labels, more than 250 records and revision changes through HTTP.
+
+Headless Edge checks passed: 10-node/four-domain demo, domain filtering, search, file iframe preview, namespace switching, 390px layout without page overflow and no JavaScript errors. A separate temporary database was updated while its browser page stayed open; the new source appeared automatically without manual refresh. Private project records and generated screenshots are not published.

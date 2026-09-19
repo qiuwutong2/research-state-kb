@@ -361,3 +361,11 @@ docs/                          维护与验收说明
 本仓库是研究工作区的独立发布副本；未包含真实来源、历史私有评审材料、环境、密钥或下载的上游仓库。运行时使用官方 [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)；Skill/MCP 配置参考 [Codex Skills](https://developers.openai.com/zh-Hans/docs/build-skills) 与 [Codex MCP](https://developers.openai.com/zh-Hans/docs/extend/mcp)。
 
 **许可尚未指定。** 仓库可见性不等于授予开源许可；在维护者选择许可前，不宣称为 MIT、Apache 或其他开源授权。第三方依赖遵循各自许可。
+
+## 知识星图：领域与引用联系
+
+本机网页现在也能展示知识库中的领域、资料、方法、公式、实验方案及其引用联系。点击节点查看来源文件、分类理由和被哪些实验使用；与实验脉络页互相导航。
+
+服务启动后打开 http://127.0.0.1:8765/knowledge 。新知识入库后页面每 3 秒自动检查更新，无分类的记录进入待分类区。领域由 Agent 阅读后通过 classify_knowledge 明确登记，不推断未知关系；引用固定到版本。
+
+运行 python scripts/knowledge_demo.py 后访问 http://127.0.0.1:8765/knowledge?namespace=demo 可体验四领域教学示例。详见 [知识星图使用说明](docs/KNOWLEDGE_MAP.md)。
